@@ -2,15 +2,28 @@
 - name: RHEL AI VM setup
   when: deploy_rhelai_enabled | bool
   block:
-    - name: Install python-openstackclient
-      ansible.builtin.pip:
-        name: python-openstackclient
-      become: true
-      when: deploy_rhelai_openstack_command == "openstack"
+    - name: Use python-openstackclient
+      when: not deploy_rhelai_use_rhoso_openstackclient | bool
+      block:
+        - name: Ensure python-openstackclient is installed
+          ansible.builtin.pip:
+            name: python-openstackclient
+          become: true
+        - name: Set openstack command to local client
+          ansible.builtin.set_fact:
+            _openstack_command: "openstack"
+
+    - name: Set openstack command to RHOSO openstack client pod
+      when: deploy_rhelai_use_rhoso_openstackclient | bool
+      ansible.builtin.set_fact:
+        _openstack_command: "oc rsh openstackclient openstack"
 
     - name: VM Cleanup (Pre)
       ansible.builtin.import_tasks: vm_cleanup.yaml
       when: deploy_rhelai_pre_cleanup_enabled | bool
+
+    - name: Set up SSH key for VM
+      ansible.builtin.import_tasks: vm_sshkey.yaml
 
     - name: VM Deploy
       ansible.builtin.import_tasks: vm_deploy.yaml

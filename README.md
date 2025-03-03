@@ -10,12 +10,20 @@ Once the RHOSO + RHEL AI setup is complete, do the following:
     ```
 1. (Optional - see below) Create a credentials file for registry login using a token. You can generate one at [here](https://access.redhat.com/terms-based-registry/) after logging in.
 
-    If not providing registry credentials, you must disable model tests with `-e model_tests_enabled=false`
+    WARNING - If not providing registry credentials, you must disable model tests with `-e model_tests_enabled=false`
 
     creds.yaml
     ```
     model_download_registry_username: "|3c5aa7e0-9bb9...."
     model_download_registry_password: "eyJhbGciOiJSUzUxMiJ9...."
+    ```
+1. Ensure you are logged in to Openshift
+    ```
+    oc login ...
+    ```
+1. (Optional) Provide an SSH key to use for access to RHELAI VM
+    ```
+    oc create secret generic rhelai-vm-secret-key --from-file=ssh-privatekey=~/.ssh/rhel-ai.pem
     ```
 1. Run it (requires ansible-core>=2.15)
     ```

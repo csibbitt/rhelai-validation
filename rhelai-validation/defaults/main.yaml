@@ -10,13 +10,13 @@ deploy_rhelai_flavor: nvidia
 # [string] Floating IP to assign to the VM
 deploy_rhelai_floating_ip: 192.168.122.222
 # [string] WARNING Where to (over-)write the ssh key. Must match path in inventory
-deploy_rhelai_private_key_file: ~/.ssh/rhel-ai.pem
+deploy_rhelai_private_key_file: /var/lib/ansible/.ssh/compute_id
 # [bool] Whether to clean up the VM before running tests
 deploy_rhelai_pre_cleanup_enabled: true
 # [bool] Whether to clean up the VM after running tests
 deploy_rhelai_post_cleanup_enabled: false
-# [string] Set to "openstack" if it's available locally
-deploy_rhelai_openstack_command: openstack
+# [bool] Whether to use RHOSO openstackclient pod, otherwise uses python-openstackclient
+deploy_rhelai_use_rhoso_openstackclient: false
 
 # [string] DNS server to inject into /etc/resolv.conf
 dns_server: 192.168.122.1

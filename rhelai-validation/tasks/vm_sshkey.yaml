@@ -1,0 +1,60 @@
+---
+- name: Check if SSH privkey exists
+  ansible.builtin.stat:
+    path: "{{ deploy_rhelai_private_key_file }}"
+  register: stat_result
+
+- name: Create new SSH keypair in openstack
+  when: not stat_result.stat.exists
+  block:
+    - name: Create new openstack keypair for {{ deploy_rhelai_vm_name }}
+      ansible.builtin.command: "{{ _openstack_command }} --insecure keypair create {{ deploy_rhelai_vm_name }}"
+      environment:
+        OS_CLOUD: default
+      no_log: true
+      register: output
+      changed_when: true
+
+    - name: Write ssh key to file for {{ deploy_rhelai_vm_name }}
+      ansible.builtin.copy:
+        content: "{{ output.stdout }}\n"
+        dest: "{{ deploy_rhelai_private_key_file }}"
+        mode: "0600"
+      no_log: true
+
+- name: Use provided SSH key
+  block:
+    - name: Check if SSH pubkey exists
+      ansible.builtin.stat:
+        path: "{{ deploy_rhelai_private_key_file }}.pub"
+      register: stat_result
+
+    - name: Set path for pubkey (local)
+      when: not deploy_rhelai_use_rhoso_openstackclient | bool
+      ansible.builtin.set_fact:
+        _ssh_pubkey_path: "{{ deploy_rhelai_private_key_file }}.pub"
+
+    - name: Set path for pubkey (openstackclient pod)
+      when: deploy_rhelai_use_rhoso_openstackclient | bool
+      ansible.builtin.set_fact:
+        _ssh_pubkey_path: /tmp/{{ deploy_rhelai_vm_name }}.pub
+
+    - name: Create SSH pubkey from provided privkey
+      when: not stat_result.stat.exists
+      ansible.builtin.command: ssh-keygen -y -f {{ deploy_rhelai_private_key_file }} >> {{ _ssh_pubkey_path }}
+      changed_when: true
+
+    - name: Copy SSH pubkey to openstackclient pod
+      when: deploy_rhelai_use_rhoso_openstackclient | bool
+      ansible.builtin.command: oc cp openstackclient:{{ _ssh_pubkey_path }}
+      environment:
+        OS_CLOUD: default
+      changed_when: true
+
+    - name: Create openstack keypair with provided key for {{ deploy_rhelai_vm_name }}
+      ansible.builtin.command: "{{ _openstack_command }} --insecure keypair create \
+        --public-key {{ deploy_rhelai_private_key_file }}.pub {{ deploy_rhelai_vm_name }}"
+      environment:
+        OS_CLOUD: default
+      no_log: true
+      changed_when: true
