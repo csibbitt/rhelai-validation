@@ -1,4 +1,7 @@
 ---
+- name: "TEST[demo] Failing for demo"
+  ansible.builtin.assert:
+    that: false
 - name: "TEST[nvidia] Check if GPUs in Passthrough mode are present in RHEL AI VM (nvidia-smi)"
   ansible.builtin.assert:
     that: nvidia_gpu_count.stdout|int > 0

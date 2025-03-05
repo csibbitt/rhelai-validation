@@ -3,13 +3,17 @@
   become: true
   ansible.builtin.import_tasks: setup.yaml
 - name: Check GPUs
+  tags: demo
   ansible.builtin.import_tasks: gpus.yaml
 - name: GPUs Assertions  # noqa: ignore-errors
+  tags: demo
   ansible.builtin.import_tasks: gpus_assertions.yaml
   ignore_errors: true
 - name: Check NVIDIA
+  tags: demo
   ansible.builtin.import_tasks: nvidia.yaml
 - name: NVIDIA Assertions  # noqa: ignore-errors
+  tags: demo
   ansible.builtin.import_tasks: nvidia_assertions.yaml
   ignore_errors: true
 - name: Check iLab
