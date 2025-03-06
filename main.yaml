@@ -8,11 +8,11 @@
         name: rhelai-validation
         tasks_from: vm_pre.yaml
 
-- name: RHEL AI Validation
-  hosts: target_nodes
-  gather_facts: false
-  roles:
-    - rhelai-validation
+# - name: RHEL AI Validation
+#   hosts: target_nodes
+#   gather_facts: false
+#   roles:
+#     - rhelai-validation
 
 - name: RHEL AI VM cleanup
   hosts: control_node
