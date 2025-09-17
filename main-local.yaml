@@ -1,0 +1,6 @@
+---
+- name: RHEL AI Validation
+  hosts: target_nodes
+  gather_facts: false
+  roles:
+    - rhelai-validation

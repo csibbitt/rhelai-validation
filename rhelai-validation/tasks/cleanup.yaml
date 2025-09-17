@@ -6,11 +6,6 @@
     line: nameserver {{ dns_server }}
   when: dns_server != ""
 
-- name: Clean-up iLab Insights config
-  ansible.builtin.file:
-    path: /etc/ilab
-    state: absent
-
 - name: Clean-up the scripts directory
   ansible.builtin.file:
     path: /tmp/scripts
