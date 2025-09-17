@@ -1,0 +1,104 @@
+---
+# Create OpenStack networks, subnets, router, and security groups
+# This replaces the OpenStack CLI commands with Ansible modules
+
+- name: Create private network
+  openstack.cloud.network:
+    name: "{{ deploy_rhelai_net_name }}"
+    shared: true
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+
+- name: Create private subnet
+  openstack.cloud.subnet:
+    name: "{{ deploy_rhelai_net_name }}_sub"
+    network: "{{ deploy_rhelai_net_name }}"
+    cidr: 192.168.0.0/24
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+
+# - name: Create public network
+#   openstack.cloud.network:
+#     name: public
+#     external: true
+#     provider_network_type: flat
+#     provider_physical_network: datacentre
+#     state: present
+
+# - name: Create public subnet
+#   openstack.cloud.subnet:
+#     name: public_subnet
+#     network: public
+#     cidr: 192.168.122.0/24
+#     allocation_pools:
+#       - start: 192.168.122.171
+#         end: 192.168.122.250
+#     gateway_ip: 192.168.122.1
+#     enable_dhcp: true
+#     state: present
+
+- name: Create private router
+  openstack.cloud.router:
+    name: priv_router
+    interfaces:
+      - net: "{{ deploy_rhelai_net_name }}"
+        subnet: "{{ deploy_rhelai_net_name }}_sub"
+    external_gateway_info:
+      network: public
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  register: private_router
+
+- name: Add private subnet to router
+  openstack.cloud.router_interface:
+    router: priv_router
+    subnet: priv_sub
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  when: private_router.changed or private_subnet.changed
+
+- name: Set external gateway for private router
+  openstack.cloud.router:
+    name: priv_router
+    external_gateway: public
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  when: private_router.changed
+
+- name: Create basic security group
+  openstack.cloud.security_group:
+    name: "{{ deploy_rhelai_security_group }}"
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  register: security_group
+
+- name: Add ICMP rule to security group
+  openstack.cloud.security_group_rule:
+    security_group: "{{ deploy_rhelai_security_group }}"
+    protocol: icmp
+    direction: ingress
+    icmp_type: -1
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  when: security_group.changed
+
+- name: Add SSH rule to security group
+  openstack.cloud.security_group_rule:
+    security_group: "{{ deploy_rhelai_security_group }}"
+    protocol: tcp
+    port_range_min: 22
+    port_range_max: 22
+    direction: ingress
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  when: security_group.changed
+
+- name: Add TCP rule for all ports to security group
+  openstack.cloud.security_group_rule:
+    security_group: "{{ deploy_rhelai_security_group }}"
+    protocol: tcp
+    remote_ip_prefix: 0.0.0.0/0
+    direction: egress
+    state: present
+    ca_cert: "{{ deploy_rhelai_ca_cert_path }}"
+  when: security_group.changed

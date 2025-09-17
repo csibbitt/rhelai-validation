@@ -1,4 +1,6 @@
 ---
+### WIP - not yet converted from ilab to vllm
+
 - name: Construct the model_path
   ansible.builtin.set_fact:
     model_path: "{{ [model_path_base | regex_replace('/$', ''), model_name] | join('/') }}"
@@ -6,25 +8,6 @@
 - name: Count the configured GPUs
   ansible.builtin.set_fact:
     num_gpus: '{{ pci_devices | dict2items | map(attribute="value") | sum }}'
-
-- name: Run ilab config init
-  ansible.builtin.expect:
-    command: ilab config init
-    responses:
-      Enter the number of your choice: 0
-      Do you want to restore these profiles to the default values: "y"
-      Do you still want to continue: "y"
-    timeout: 900
-    echo: true
-
-- name: Get rhelai config file content
-  ansible.builtin.slurp:
-    src: "{{ rhelai_config_file }}"
-  register: rhelai_config_slurp
-
-- name: Decode rhelai config yaml
-  ansible.builtin.set_fact:
-    rhelai_config: "{{ rhelai_config_slurp.content | b64decode | from_yaml }}"
 
 - name: Update gpus lines in config
   ansible.builtin.set_fact:

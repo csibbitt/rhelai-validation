@@ -1,4 +1,6 @@
 ---
+### WIP - not yet converted from ilab to vllm
+
 - name: Extract the repository host name
   ansible.builtin.set_fact:
     model_download_registry_host: "{{ model_download_repository_base | regex_replace('docker://(.*?)/.*', '\\1') }}"
